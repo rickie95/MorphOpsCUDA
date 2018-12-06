@@ -1,4 +1,4 @@
-./CUDAUtils.o : ../CUDAUtils.cu \
+./MorphableOperator.o : ../MorphableOperator.cu \
     /usr/include/stdc-predef.h \
     /usr/local/cuda-9.0/bin/../targets/x86_64-linux/include/cuda_runtime.h \
     /usr/local/cuda-9.0/bin/../targets/x86_64-linux/include/host_config.h \
@@ -121,91 +121,17 @@
     /usr/local/cuda-9.0/bin/../targets/x86_64-linux/include/texture_indirect_functions.h \
     /usr/local/cuda-9.0/bin/../targets/x86_64-linux/include/surface_indirect_functions.h \
     /usr/local/cuda-9.0/bin/../targets/x86_64-linux/include/device_launch_parameters.h \
-    ../CUDAUtils.h \
-    /usr/include/c++/5/iostream \
-    /usr/include/c++/5/ostream \
-    /usr/include/c++/5/ios \
-    /usr/include/c++/5/iosfwd \
-    /usr/include/c++/5/bits/stringfwd.h \
-    /usr/include/c++/5/bits/memoryfwd.h \
-    /usr/include/c++/5/bits/postypes.h \
-    /usr/include/c++/5/cwchar \
-    /usr/include/x86_64-linux-gnu/bits/wchar.h \
-    /usr/include/c++/5/bits/char_traits.h \
-    /usr/include/c++/5/bits/stl_algobase.h \
-    /usr/include/c++/5/bits/functexcept.h \
-    /usr/include/c++/5/ext/numeric_traits.h \
-    /usr/include/c++/5/bits/stl_pair.h \
-    /usr/include/c++/5/bits/move.h \
-    /usr/include/c++/5/bits/concept_check.h \
+    ../MorphableOperator.h \
+    /usr/include/c++/5/chrono \
+    /usr/include/c++/5/ratio \
     /usr/include/c++/5/type_traits \
-    /usr/include/c++/5/bits/stl_iterator_base_types.h \
-    /usr/include/c++/5/bits/stl_iterator_base_funcs.h \
-    /usr/include/c++/5/debug/debug.h \
-    /usr/include/c++/5/bits/stl_iterator.h \
-    /usr/include/c++/5/bits/ptr_traits.h \
-    /usr/include/c++/5/bits/predefined_ops.h \
     /usr/include/c++/5/cstdint \
     /usr/lib/gcc/x86_64-linux-gnu/5/include/stdint.h \
     /usr/include/stdint.h \
-    /usr/include/c++/5/bits/localefwd.h \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/c++locale.h \
-    /usr/include/c++/5/clocale \
-    /usr/include/locale.h \
-    /usr/include/x86_64-linux-gnu/bits/locale.h \
-    /usr/include/c++/5/cctype \
-    /usr/include/ctype.h \
-    /usr/include/c++/5/bits/ios_base.h \
-    /usr/include/c++/5/ext/atomicity.h \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/gthr.h \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/gthr-default.h \
-    /usr/include/pthread.h \
-    /usr/include/sched.h \
-    /usr/include/x86_64-linux-gnu/bits/sched.h \
-    /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/atomic_word.h \
-    /usr/include/c++/5/bits/locale_classes.h \
-    /usr/include/c++/5/string \
-    /usr/include/c++/5/bits/allocator.h \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/c++allocator.h \
-    /usr/include/c++/5/ext/new_allocator.h \
-    /usr/include/c++/5/bits/ostream_insert.h \
-    /usr/include/c++/5/bits/cxxabi_forced.h \
-    /usr/include/c++/5/bits/stl_function.h \
-    /usr/include/c++/5/backward/binders.h \
-    /usr/include/c++/5/bits/range_access.h \
-    /usr/include/c++/5/initializer_list \
-    /usr/include/c++/5/bits/basic_string.h \
-    /usr/include/c++/5/ext/alloc_traits.h \
-    /usr/include/c++/5/bits/alloc_traits.h \
-    /usr/include/c++/5/ext/string_conversions.h \
-    /usr/include/c++/5/cstdio \
-    /usr/include/c++/5/cerrno \
-    /usr/include/errno.h \
-    /usr/include/x86_64-linux-gnu/bits/errno.h \
-    /usr/include/linux/errno.h \
-    /usr/include/x86_64-linux-gnu/asm/errno.h \
-    /usr/include/asm-generic/errno.h \
-    /usr/include/asm-generic/errno-base.h \
-    /usr/include/c++/5/bits/functional_hash.h \
-    /usr/include/c++/5/bits/hash_bytes.h \
-    /usr/include/c++/5/bits/basic_string.tcc \
-    /usr/include/c++/5/bits/locale_classes.tcc \
-    /usr/include/c++/5/system_error \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/error_constants.h \
-    /usr/include/c++/5/stdexcept \
-    /usr/include/c++/5/streambuf \
-    /usr/include/c++/5/bits/streambuf.tcc \
-    /usr/include/c++/5/bits/basic_ios.h \
-    /usr/include/c++/5/bits/locale_facets.h \
-    /usr/include/c++/5/cwctype \
-    /usr/include/wctype.h \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/ctype_base.h \
-    /usr/include/c++/5/bits/streambuf_iterator.h \
-    /usr/include/x86_64-linux-gnu/c++/5/bits/ctype_inline.h \
-    /usr/include/c++/5/bits/locale_facets.tcc \
-    /usr/include/c++/5/bits/basic_ios.tcc \
-    /usr/include/c++/5/bits/ostream.tcc \
-    /usr/include/c++/5/istream \
-    /usr/include/c++/5/bits/istream.tcc \
-    /usr/include/c++/5/cassert
+    /usr/include/x86_64-linux-gnu/bits/wchar.h \
+    /usr/include/c++/5/limits \
+    /usr/include/c++/5/ctime \
+    /usr/include/c++/5/bits/parse_numbers.h \
+    ../Image.h \
+    ../CUDAUtils.h \
+    ../StructuringElement.h

@@ -27,6 +27,7 @@
 								<option id="nvcc.compiler.option.level.1927678956" name="Generate host debug information (-g)" superClass="nvcc.compiler.option.level" value="true" valueType="boolean"/>
 								<option defaultValue="nvcc.compiler.optimization.level.none" id="nvcc.compiler.optimization.level.586200481" name="Optimization Level" superClass="nvcc.compiler.optimization.level" valueType="enumerated"/>
 								<option id="nvcc.compiler.pic.1734261141" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
+								<option id="nvcc.compiler.cpp11option.1039884155" superClass="nvcc.compiler.cpp11option" value="true" valueType="boolean"/>
 								<inputType id="nvcc.compiler.input.cu.1374314301" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.2028682004" superClass="nvcc.compiler.input.cpp"/>
 								<inputType id="nvcc.compiler.input.c.204323403" superClass="nvcc.compiler.input.c"/>
@@ -50,6 +51,7 @@
 					<sass major="3" minor="7"/>
 					<ptx major="3" minor="7"/>
 				</executable>
+				<editor-arch major="3" minor="7"/>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
@@ -73,12 +75,12 @@
 					<folderInfo id="com.nvidia.cuda.ide.nine_zero.configuration.release.1619124059." name="/" resourcePath="">
 						<toolChain id="com.nvidia.cuda.ide.toolchain.nine_zero.exe.release.1323189127" name="CUDA Toolkit 9.0" superClass="com.nvidia.cuda.ide.toolchain.nine_zero.exe.release">
 							<targetPlatform archList="all" binaryParser="com.nvidia.cuda.ide.elf;com.nvidia.cuda.ide.macho;com.nvidia.cuda.ide.cubin" id="com.nvidia.cuda.ide.targetPlatform.817398334" isAbstract="false" name="Debug Platform" osList="linux,macosx" superClass="com.nvidia.cuda.ide.targetPlatform"/>
-							<builder buildPath="${workspace_loc:/MorphableOperatorsCUDA}/Release" id="com.nvidia.cuda.ide.builder.1756158743" managedBuildOn="true" name="CUDA Toolkit 9.0 Builder.Release" superClass="com.nvidia.cuda.ide.builder"/>
+							<builder buildPath="${workspace_loc:/MorphableOperatorsCUDA}/Release" id="com.nvidia.cuda.ide.builder.1756158743" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CUDA Toolkit 9.0 Builder" superClass="com.nvidia.cuda.ide.builder"/>
 							<tool id="nvcc.compiler.base.1027856250" name="NVCC Compiler" superClass="nvcc.compiler.base">
-								<option id="nvcc.compiler.deviceDebug.1321914809" superClass="nvcc.compiler.deviceDebug"/>
-								<option id="nvcc.compiler.option.level.477029074" superClass="nvcc.compiler.option.level"/>
-								<option defaultValue="nvcc.compiler.optimization.level.most" id="nvcc.compiler.optimization.level.1387684686" superClass="nvcc.compiler.optimization.level" valueType="enumerated"/>
-								<option id="nvcc.compiler.pic.1499723616" superClass="nvcc.compiler.pic"/>
+								<option id="nvcc.compiler.deviceDebug.1321914809" name="Generate device debug information (-G)" superClass="nvcc.compiler.deviceDebug"/>
+								<option id="nvcc.compiler.option.level.477029074" name="Generate host debug information (-g)" superClass="nvcc.compiler.option.level"/>
+								<option defaultValue="nvcc.compiler.optimization.level.most" id="nvcc.compiler.optimization.level.1387684686" name="Optimization Level" superClass="nvcc.compiler.optimization.level" valueType="enumerated"/>
+								<option id="nvcc.compiler.pic.1499723616" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
 								<inputType id="nvcc.compiler.input.cu.991350451" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.491975302" superClass="nvcc.compiler.input.cpp"/>
 								<inputType id="nvcc.compiler.input.c.839904936" superClass="nvcc.compiler.input.c"/>
@@ -131,4 +133,5 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>
