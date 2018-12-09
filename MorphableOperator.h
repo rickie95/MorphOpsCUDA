@@ -12,9 +12,9 @@
 #include "Image.h"
 #include "CUDAUtils.h"
 #include "StructuringElement.h"
+
 #define EROSION 1
 #define DILATATION 0
-
 #define BLOCK_DIM 16
 
 __constant__ float deviceSEdata[25 * 25]; // preallocate 2.5KB for structured element.

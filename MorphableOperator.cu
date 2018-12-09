@@ -1,8 +1,48 @@
 #include "MorphableOperator.h"
 
+
+__host__ Image_t* opening(Image_t* input, StructElem* structElem, std::chrono::duration<double> *time_span){ // EROSION then DILATATION
+    std::chrono::duration_cast<std::chrono::duration<double>> erosion_time, dilatation_time;
+    Image_t* opened = dilatation(erosion(input, structElem, erosion_time), structElem, dilatation_time);
+    if(time_span != NULL)
+        *time_span = std::chrono::duration_cast<std::chrono::duration<double>>(erosion_time + dilatation_time);
+    return opened;
+}
+
+__host__ Image_t* closing(Image_t* input, StructElem* structElem, std::chrono::duration<double> *time_span){
+    std::chrono::duration_cast<std::chrono::duration<double>> erosion_time, dilatation_time;
+    Image_t* closed = erosion(dilatation(input, structElem, dilatation_time), structElem, erosion_time);
+    if(time_span != NULL)
+    	*time_span = std::chrono::duration_cast<std::chrono::duration<double>>(erosion_time + dilatation_time);
+    return closed;
+}
+
+__host__ Image_t* topHat(Image_t* input, StructElem* structElem, std::chrono::duration<double> *time_span){
+	// Originale - Apertura
+	Image_t* opened = opening(input, structElem, time_span);
+	float *topHat_data = (float*)malloc(input->width * input->height * sizeof(float));
+	for(int i = 0; i < input->width * input->height; i += 1) // Maybe should transposed on GPU?
+		topHat_data[i] = max(input->data[i] - opened->data[i], 0);
+
+	Image_delete(opened);
+	return Image_new(input->width, input->height, 1, topHat_data);
+}
+
+__host__ Image_t* bottomHat(Image_t* input, StructElem* structElem, std::chrono::duration<double> *time_span){
+	// Chiusura - originale
+	Image_t* closed = closing(input, structElem, time_span);
+	float *bottomHat_data = (float*)malloc(input->width * input->height * sizeof(float));
+	for(int i = 0; i < input->width * input->height; i += 1) // Maybe should transposed on GPU?
+	    bottomHat_data[i] = max(closed->data[i] - input->data[i], 0);
+
+	Image_delete(closed);
+	return Image_new(input->width, input->height, 1, topHat_data);
+}
+
 __host__ Image_t* erosion(Image_t* input, StructElem* structElem, std::chrono::duration<double> *time_span){
 	// malloc for I/O images and SE
 	float *deviceInputImage, *deviceOutputImage, *deviceSEData, *hostOutputImage=NULL;
+
 	std::chrono::high_resolution_clock::time_point t_start, t_end;
 	CUDA_CHECK_RETURN(cudaMalloc((void ** )&deviceInputImage, sizeof(float) * input->height * input->width));
 	CUDA_CHECK_RETURN(cudaMalloc((void ** )&deviceOutputImage, sizeof(float) * input->height * input->width));
@@ -10,20 +50,53 @@ __host__ Image_t* erosion(Image_t* input, StructElem* structElem, std::chrono::d
 	// Send data (Input and SE)
 	CUDA_CHECK_RETURN(cudaMemcpy(deviceInputImage, input->data, input->height * input->width * sizeof(float),cudaMemcpyHostToDevice));
 	CUDA_CHECK_RETURN(cudaMemcpy(deviceSEData, structElem->data, structElem->get_width() * structElem->get_height() * sizeof(float),cudaMemcpyHostToDevice));
+
 	// COMPUTE
 	t_start = std::chrono::high_resolution_clock::now();
 	process<<<1, 1>>>(deviceInputImage, deviceOutputImage, input->width, input->height, deviceSEData,
 		structElem->get_width(), structElem->get_height(), EROSION);
 	cudaDeviceSynchronize(); // wait for completion
 	t_end = std::chrono::high_resolution_clock::now();
-	*time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+	if(time_span != NULL)
+	    *time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+
 	// download data
 	CUDA_CHECK_RETURN(cudaMemcpy(hostOutputImage, deviceOutputImage, input->height * input->width * sizeof(float),cudaMemcpyDeviceToHost));
     Image_t *output = Image_new(input->width, input->height, 1, hostOutputImage);
-	// free memory
+	// free memory on GPU
 	cudaFree(deviceInputImage);
 	cudaFree(deviceOutputImage);
 	cudaFree(deviceSEData);
+    return output;
+}
+
+__host__ Image_t* dilatation(Image_t* input, StructElem* structElem, std::chrono::duration<double> *time_span){
+// malloc for I/O images and SE
+    float *deviceInputImage, *deviceOutputImage, *deviceSEData, *hostOutputImage=NULL;
+
+    std::chrono::high_resolution_clock::time_point t_start, t_end;
+    CUDA_CHECK_RETURN(cudaMalloc((void ** )&deviceInputImage, sizeof(float) * input->height * input->width));
+    CUDA_CHECK_RETURN(cudaMalloc((void ** )&deviceOutputImage, sizeof(float) * input->height * input->width));
+    CUDA_CHECK_RETURN(cudaMalloc((void ** )&deviceSEData, sizeof(float) * structElem->get_width() * structElem->get_height()));
+    // Send data (Input and SE)
+    CUDA_CHECK_RETURN(cudaMemcpy(deviceInputImage, input->data, input->height * input->width * sizeof(float),cudaMemcpyHostToDevice));
+    CUDA_CHECK_RETURN(cudaMemcpy(deviceSEData, structElem->data, structElem->get_width() * structElem->get_height() * sizeof(float),cudaMemcpyHostToDevice));
+
+    // COMPUTE
+    t_start = std::chrono::high_resolution_clock::now();
+    process<<<1, 1>>>(deviceInputImage, deviceOutputImage, input->width, input->height, deviceSEData,
+    structElem->get_width(), structElem->get_height(), DILATATION);
+    cudaDeviceSynchronize(); // wait for completion
+    t_end = std::chrono::high_resolution_clock::now();
+    *time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+
+    // download data
+    CUDA_CHECK_RETURN(cudaMemcpy(hostOutputImage, deviceOutputImage, input->height * input->width * sizeof(float),cudaMemcpyDeviceToHost));
+    Image_t *output = Image_new(input->width, input->height, 1, hostOutputImage);
+    // free memory
+    cudaFree(deviceInputImage);
+    cudaFree(deviceOutputImage);
+    cudaFree(deviceSEData);
     return output;
 }
 
@@ -79,6 +152,15 @@ __global__ void process(float *input_img, float *output_img, int img_W, int img_
 
     __syncthreads();
 
+}
+
+// TODO: check out max and min
+__host__ float max(float a, float b){
+	return a>b ? a : b;
+}
+
+__host__ float min(float a, float b){
+	return a<b ? a : b;
 }
 
 __device__ float max(float* array, int length){

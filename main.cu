@@ -8,21 +8,13 @@
 #include "PPM.h"
 #include "MorphableOperator.h"
 
-#define SE_W 5
-#define SE_H 5
-
 int main (int argc, char **argv){
+    // TODO argv params for SE and block size
 
     std::vector<std::string> filename = {"logitech_bill_clinton_bin.ppm", "micropro_wordstar_bin.ppm"};
-    /*
-    filename.push_back("logitech_bill_clinton_bin.ppm");
-    filename.push_back("micropro_wordstar_bin.ppm");
-    filename.push_back("apple_adam_bin.ppm");
-    filename.push_back("two_bytes_better_bin.ppm"); //"two_bytes_better_bin.ppm");*/
 
-    double times[filename.size() * 6];
-    int times_index = 0;
-    Image_t *input_img, *img, *out;
+    std::vector<double> times = new std::vector<double>(filename.size() * 6);
+    Image_t *input_img, *img, *output;
     std::string name;
     std::chrono::high_resolution_clock::time_point t_start, t_end;
     std::chrono::duration<double> time_span;
@@ -46,18 +38,66 @@ int main (int argc, char **argv){
 			}
 		}
 
-
         img = Image_new(input_img->width, input_img->height, 1, input);
-		Image_t* output = erosion(img, se, &time_span);
 
+		// ELABORATION STAGE
+		// EROSION
+		output = erosion(img, se, &time_span);
+        cudaDeviceSynchronize();
+		times.push_back(time_span.qualcosa()) // FIXME
+		PPM_export((file + "_eroded.ppm").c_str(), output);
+		Image_delete(output);
 
+		// DILATATION
+        output = dilatation(img, se, &time_span);
+        cudaDeviceSynchronize();
+        times.push_back(time_span.qualcosa()) // FIXME
+        PPM_export((file + "dilatated.ppm").c_str(), output);
+        Image_delete(output);
 
-		cudaDeviceSynchronize();
+        // OPENING
+        output = opening(img, se, &time_span);
+        cudaDeviceSynchronize();
+        times.push_back(time_span.qualcosa()) // FIXME
+        PPM_export((file + "_opened.ppm").c_str(), output);
+        Image_delete(output);
+
+        // CLOSING
+        output = closing(img, se, &time_span);
+        cudaDeviceSynchronize();
+        times.push_back(time_span.qualcosa()) // FIXME
+        PPM_export((file + "_closed.ppm").c_str(), output);
+        Image_delete(output);
+
+        // TOPHAT
+        output = topHat(img, se, &time_span);
+        cudaDeviceSynchronize();
+        times.push_back(time_span.qualcosa()) // FIXME
+        PPM_export((file + "_topHat.ppm").c_str(), output);
+        Image_delete(output);
+
+        // BOTTOMHAT
+        output = bottomHat(img, se, &time_span);
+        cudaDeviceSynchronize();
+        times.push_back(time_span.qualcosa()) // FIXME
+        PPM_export((file + "_bottomHat.ppm").c_str(), output);
+        Image_delete(output);
+
+        free(input);
     }
 
-
-
-
+    fstream timings_file = NULL; // FIXME
+    int i = 0;
+    for(auto file = filename.begin(); file != filename.end(); ++file){
+        timings_file << file.c_str() << endl;
+        timings_file << "EROSION;" <<times[i++] <<endl;
+        timings_file << "DILATATION;" <<times[i++] <<endl;
+        timings_file << "OPENING;" <<times[i++] <<endl;
+        timings_file << "CLOSING;" <<times[i++] <<endl;
+        timings_file << "TOPHAT;" <<times[i++] <<endl;
+        timings_file << "BOTTOMHAT;" <<times[i++] <<endl;
+    }
+    // FIXME close file
 
 	return 0;
 }
