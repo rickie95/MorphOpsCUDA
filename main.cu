@@ -9,18 +9,20 @@
 #include "MorphableOperator.h"
 
 int main (int argc, char **argv){
-    // TODO argv params for SE and block size
 
-    std::vector<std::string> filename = {"logitech_bill_clinton_bin.ppm", "micropro_wordstar_bin.ppm"};
+	std::string path_input = "/home/riccardo_malavolti/immagini_test/";
+	std::string path_results = path_input;
 
-    std::vector<double> times = new std::vector<double>(filename.size() * 6);
+    std::vector<std::string> filename = {"logitech_bill_clinton_bin.ppm", "apple_adam_bin.ppm", "micropro_wordstar_bin.ppm", "two_bytes_better_bin.ppm"};
+
+    std::vector<double> times[filename.size() * 6];
     Image_t *input_img, *img, *output;
     std::string name;
     std::chrono::high_resolution_clock::time_point t_start, t_end;
     std::chrono::duration<double> time_span;
 
     for(auto file = filename.begin(); file != filename.end(); ++file){
-        input_img = PPM_import(file->c_str());
+        input_img = PPM_import((path_input + *file).c_str());
         printf("\nLoaded %s (%dx%d) \n", file->c_str(), input_img->width, input_img->height);
 
         // 0.0 -> BLACK ; 1.0 -> WHITE
@@ -42,62 +44,71 @@ int main (int argc, char **argv){
 
 		// ELABORATION STAGE
 		// EROSION
+        printf("Erosion...\t");
 		output = erosion(img, se, &time_span);
         cudaDeviceSynchronize();
-		times.push_back(time_span.qualcosa()) // FIXME
-		PPM_export((file + "_eroded.ppm").c_str(), output);
+		times->push_back(time_span.count());
+		PPM_export((*file +(std::string)"_eroded.ppm").c_str(), output);
 		Image_delete(output);
 
+
 		// DILATATION
+		printf("Dilatation...\t");
         output = dilatation(img, se, &time_span);
         cudaDeviceSynchronize();
-        times.push_back(time_span.qualcosa()) // FIXME
-        PPM_export((file + "dilatated.ppm").c_str(), output);
+        times->push_back(time_span.count());
+        PPM_export((path_results + *file +(std::string)"dilatated.ppm").c_str(), output);
         Image_delete(output);
 
         // OPENING
+        printf("Opening...\t");
         output = opening(img, se, &time_span);
         cudaDeviceSynchronize();
-        times.push_back(time_span.qualcosa()) // FIXME
-        PPM_export((file + "_opened.ppm").c_str(), output);
+        times->push_back(time_span.count());
+        PPM_export((path_results + *file +(std::string)"_opened.ppm").c_str(), output);
         Image_delete(output);
 
         // CLOSING
+        printf("Closing...\t");
         output = closing(img, se, &time_span);
         cudaDeviceSynchronize();
-        times.push_back(time_span.qualcosa()) // FIXME
-        PPM_export((file + "_closed.ppm").c_str(), output);
+        times->push_back(time_span.count());
+        PPM_export((path_results + *file +(std::string)"_closed.ppm").c_str(), output);
         Image_delete(output);
 
         // TOPHAT
+        printf("TOPHAT...\t");
         output = topHat(img, se, &time_span);
         cudaDeviceSynchronize();
-        times.push_back(time_span.qualcosa()) // FIXME
-        PPM_export((file + "_topHat.ppm").c_str(), output);
+        times->push_back(time_span.count());
+        PPM_export((path_results + *file +(std::string)"_topHat.ppm").c_str(), output);
         Image_delete(output);
 
         // BOTTOMHAT
+        printf("BOTTOM HAT... \n");
         output = bottomHat(img, se, &time_span);
         cudaDeviceSynchronize();
-        times.push_back(time_span.qualcosa()) // FIXME
-        PPM_export((file + "_bottomHat.ppm").c_str(), output);
+        times->push_back(time_span.count());
+        PPM_export((path_results + *file +(std::string)"_bottomHat.ppm").c_str(), output);
         Image_delete(output);
 
         free(input);
     }
-
-    fstream timings_file = NULL; // FIXME
-    int i = 0;
+    printf("Writing times on file...\n");
+    std::ofstream timings_file;
+    std::string fname = "timings_"+ std::to_string(TILE_WIDTH) + ".csv";
+    timings_file.open((path_results + fname).c_str());
+    auto it = times->begin();
     for(auto file = filename.begin(); file != filename.end(); ++file){
-        timings_file << file.c_str() << endl;
-        timings_file << "EROSION;" <<times[i++] <<endl;
-        timings_file << "DILATATION;" <<times[i++] <<endl;
-        timings_file << "OPENING;" <<times[i++] <<endl;
-        timings_file << "CLOSING;" <<times[i++] <<endl;
-        timings_file << "TOPHAT;" <<times[i++] <<endl;
-        timings_file << "BOTTOMHAT;" <<times[i++] <<endl;
+        timings_file << file->c_str() << "(TILE_WIDTH="<<TILE_WIDTH<<")"<< "\n";
+        timings_file << "EROSION;" << *it++ << "\n";
+        timings_file << "DILATATION;" <<*it++<<"\n";
+        timings_file << "OPENING;" << *it++ <<"\n";
+        timings_file << "CLOSING;" << *it++ <<"\n";
+        timings_file << "TOPHAT;" << *it++ <<"\n";
+        timings_file << "BOTTOMHAT;" << *it++ <<"\n";
     }
-    // FIXME close file
-
+    timings_file.close();
+    printf("==== DONE ==== \n");
 	return 0;
 }

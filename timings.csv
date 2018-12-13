@@ -1,0 +1,7 @@
+/home/riccardo_malavolti/immagini_test/logitech_bill_clinton_bin.ppm
+EROSION;0.0242982
+DILATATION;0.0243204
+OPENING;0
+CLOSING;2.77171e-321
+TOPHAT;6.94805e-310
+BOTTOMHAT;0

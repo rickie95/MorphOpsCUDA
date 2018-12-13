@@ -225,5 +225,6 @@
     ../Image.h \
     ../PPM.h \
     ../MorphableOperator.h \
-    ../CUDAUtils.h \
+    /usr/include/c++/5/iostream \
+    /usr/include/c++/5/cassert \
     ../StructuringElement.h
