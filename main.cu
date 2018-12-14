@@ -13,7 +13,7 @@ int main (int argc, char **argv){
 	std::string path_input = "/home/user/myfolder/";
 	std::string path_results = path_input;
 
-    std::vector<std::string> filename = {"logitech_bill_clinton_bin.ppm", "apple_adam_bin.ppm", "micropro_wordstar_bin.ppm", "two_bytes_better_bin.ppm"};
+    std::vector<std::string> filename = {"myFileA.ppm", "myFileB.ppm", "myFileC.ppm", "myFileD.ppm"};
 
     std::vector<double> times[filename.size() * 6];
     Image_t *input_img, *img, *output;

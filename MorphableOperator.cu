@@ -121,52 +121,143 @@ __host__ Image_t* dilatation(Image_t* input, StructElem* structElem, std::chrono
 }
 
 __global__ void process(float *input_img, float *output_img, int img_W, int img_H,
-		const float *__restrict__ SE,const int SE_W, const int SE_H, int operation){
+		const float *__restrict__ SE,const int SE_W, const int SE_H, int operation) {
 
-    // Assumes that input_img->data is a NxM float matrix with values 0 or 1
-    // OPERATION: 1 if erosion, 0 if dilatation
+	// Assumes that input_img->data is a NxM float matrix with values 0 or 1
+	// OPERATION: 1 if erosion, 0 if dilatation
 
-    int tx = threadIdx.x; int ty = threadIdx.y;
-    int bx = blockIdx.x; int by = blockIdx.y;
+	int tx = threadIdx.x;
+	int ty = threadIdx.y;
+	int bx = blockIdx.x;
+	int by = blockIdx.y;
 
-    int w = TILE_WIDTH + SE_W - 1;
-    extern __shared__ float input_ds[];
-    int dest = threadIdx.y * w + threadIdx.x;
+	int w = TILE_WIDTH + SE_W - 1;
+	extern __shared__ float input_ds[];
+	int dest = threadIdx.y * w + threadIdx.x;
 	int destY = dest / w;
 	int destX = dest % w;
 	int globalX = blockIdx.x * TILE_WIDTH + tx;
 	int globalY = blockIdx.y * TILE_WIDTH + ty;
 	int globalCoord = globalY * img_W + globalX;
 
-    // LOAD INNER TILE
-	if (globalY >= 0 && globalY < img_H && globalX >= 0 && globalX < img_W){
-		input_ds[(destY + SE_H/2) * w + destX +  SE_W/2] = input_img[globalCoord];
-	}else{
-		input_ds[(destY + SE_H/2) * w + destX +  SE_W/2] = -1;
+	// LOAD INNER TILE
+	if (globalY >= 0 && globalY < img_H && globalX >= 0 && globalX < img_W) {
+		input_ds[(destY + SE_H / 2) * w + destX + SE_W / 2] = input_img[globalCoord];
+	} else {
+		input_ds[(destY + SE_H / 2) * w + destX + SE_W / 2] = -1;
 	}
 
 	__syncthreads();
-    // LOAD PADDING
+
+	if (ty == 0)  // TOP COLUMN
+		for (int row = 0; row < SE_H / 2; row += 1)
+			if (globalY == 0) {
+				input_ds[row * w + destX + SE_W / 2] = -1
+			} else {
+				input_ds[row * w + destX + SE_W / 2] = input_img[(globalY - SE_H / 2 + row) * img_W + globalX];
+			}
+
+	if (tx == 0)  // LEFT COLUMN
+		for (int col = 0; col < SE_W / 2; col += 1)
+			if (globalX == 0) {
+				input_ds[(destY + SE_H / 2) * w + col] = -1
+			} else {
+				input_ds[(destY + SE_H / 2) * w + col] = input_img[globalY * img_W + (globalX - SE_W / 2 + col)];
+			}
+
+	// LOAD PADDING
+	/*
     if(tx == 0 && ty == 0){
-		for(int row = 0; row < SE_H/2; row += 1){ // TOP BAR
-			for(int col = 0; col < w; col += 1){
-				if(globalY == 0){
-					input_ds[row * w + col] = -1;
-				}else{
-					input_ds[row * w + col] = input_img[(globalY - SE_H/2 + row)* img_W + (globalX - SE_W/2 + col)];
-				}
+        for(int row = 0; row < SE_H/2; row += 1){ // TOP BAR
+            for(int col = 0; col < w; col += 1){
+                if(globalY == 0){
+                    input_ds[row * w + col] = -1;
+                }else{
+                    input_ds[row * w + col] = input_img[(globalY - SE_H/2 + row)* img_W + (globalX - SE_W/2 + col)];
+                }
+            }
+        }
+        for(int row = SE_H/2; row < w; row += 1) // LEFT COLUMN
+            for(int col = 0; col < SE_W/2; col += 1){
+                if(globalX == 0){
+                    input_ds[row * w + col] = -1;
+                }else{
+                    input_ds[row * w + col] = input_img[(globalY - SE_H/2 + row)* img_W + (globalX - SE_W/2 + col)];
+                }
+            }
+    }*/
+
+	if(ty == TILE_WIDTH - 1) // BOTTOM COLUMN
+		for (int row = w - SE_H / 2; row < w; row += 1) {
+			int gy = globalY + (row - w + SE_H / 2);
+			if (gy >= img_H) {
+				input_ds[row * w + destX + SE_W / 2] = -1;
+			} else {
+				input_ds[row * w + destX + SE_W / 2] = input_img[gy * img_W + globalX];
 			}
 		}
-		for(int row = SE_H/2; row < w; row += 1) // LEFT COLUMN
-			for(int col = 0; col < SE_W/2; col += 1){
-				if(globalX == 0){
-					input_ds[row * w + col] = -1;
-				}else{
-					input_ds[row * w + col] = input_img[(globalY - SE_H/2 + row)* img_W + (globalX - SE_W/2 + col)];
-				}
-			}
-    }
 
+	if(tx == TILE_WIDTH - 1) // RIGHT ROW
+		for(int col = SE_W/2; col < w; col += 1){
+			int gx = globalX - w + SE_H/2 + col;
+			if(gx >= img_W){
+				input_ds[(destY + SE_H/2) * w + col] = -1;
+			} else{
+				input_ds[(destY + SE_H/2) * w + col] = input_img[globalY * img_W + gx];
+			}
+		}
+
+	if(tx == 0 && ty == 0) // NW CORNER
+		for(int row = 0; row < SE_H/2; row += 1)
+			for(int col = 0; col < SE_W/2; col += 1) {
+                int gx = globalX - SE_W/2 + col;
+                int gy = globalY - SE_H/2 + row;
+                if (gx < 0 || gy < 0) { // Every pixel on the left border or the top border
+                    input_ds[row * w + col] = -1;
+                } else {
+                    input_ds[row * w + col] = input_img[gy * img_W + gx];
+                }
+            }
+
+	if(tx == TILE_WIDTH - 1 && ty == 0) // NE CORNER
+        for(int row = 0; row < SE_H/2; row += 1)
+            for(int col = TILE_WIDTH + SE_H/2; col < w; col += 1) {
+                int gx = globalX + 1 + col;
+                int gy = globalY - SE_H / 2 + row;
+                if (gx >= img_W || gy < 0) { // Every tile on the top or the right border
+                    input_ds[row * w + col] = -1;
+                } else {
+                    input_ds[row * w + col] = input_img[gy * img_W + gx];
+                }
+            }
+
+	if(tx == 0 && ty == TILE_WIDTH - 1) // SW CORNER
+	    for(int row = TILE_WIDTH + SE_H/2; row < w; row += 1)
+	        for(int col = 0; col < SE_W/2; col += 1){
+                int gx = globalX - SE_W/2 + col;
+                int gy = globalY + 1  + row;
+                if(gx < 0 || gy >= img_H ){
+                    input_ds[row * w + col] = -1;
+                } else {
+                    input_ds[row * w + col] = input_img[gy * img_W + gx];
+                }
+            }
+
+	if(tx == TILE_WIDTH - 1 && ty == TILE_WIDTH - 1) // SE CORNER
+	     for(int row = TILE_WIDTH + SE_H/2; row < w; row += 1)
+	         for(int col = TILE_WIDTH + SE_W/2; col < w; col += 1){
+                 int gx = globalX + 1 + col;
+                 int gy = globalY + 1 + row;
+                 if(gx >= img_W || gy >= img_H){
+                     input_ds[row * w + col] = -1;
+                 } else {
+                     input_ds[row * w + col] = input_img[gy * img_W + gx];
+                 }
+	         }
+
+
+
+	/*
     if(tx ==TILE_WIDTH-1 && ty == TILE_WIDTH-1){
     	for(int row = w - SE_H/2; row < w; row += 1) // 3) BOTTOM ROWS GROUP
 			for(int col = SE_W/2; col < w; col += 1){
@@ -179,6 +270,7 @@ __global__ void process(float *input_img, float *output_img, int img_W, int img_
 				}
 			}
 
+
         for(int row = SE_H/2; row < w - SE_H/2; row += 1) // 4) right COLUMNS GROUP
         	for(int col = w - SE_W/2; col < w; col += 1){
         		int gx = globalX + col + SE_W/2 - w +1;
@@ -188,21 +280,18 @@ __global__ void process(float *input_img, float *output_img, int img_W, int img_
 				}else{
 					input_ds[row * w + col] = -1;
 				}
-
         	}
-
     }
+    */
     __syncthreads();
-    // 2) COMPUTE - carica il neighbrhood e ci fa il max/min a seconda dell'operazione, poi scrive
-
-    if((globalY >= 0 && globalY < img_H && globalX >= 0 && globalX < img_W)){//}&& deve essere un pixel dell'immagine
-    		//(tx >= SE_W/2 && tx < w - SE_W/2 && ty >= SE_H/2 && ty < w - SE_H/2) ){  e deve essere un pixel del tile interno, non del padding
+    // 2) COMPUTE - load neighborhood and write max/min
+    if((globalY >= 0 && globalY < img_H && globalX >= 0 && globalX < img_W)){
         float max = input_ds[(destY + SE_H/2)*w + destX + SE_W/2];
         float min = max;
 
-    	for( int row = - SE_H/2 ; row < SE_H/2; row+=1){//ok
-    		for(int col = -SE_W/2; col < SE_W/2; col+=1){//ok
-    			if(deviceSEdata[(row + SE_H/2) * SE_W + col + SE_W/2] > 0 && //ok
+    	for(int row = - SE_H/2 ; row < SE_H/2; row+=1){
+    		for(int col = -SE_W/2; col < SE_W/2; col+=1){
+    			if(deviceSEdata[(row + SE_H/2) * SE_W + col + SE_W/2] > 0 &&
     					input_ds[(destY + SE_H/2 + row) * w + destX + SE_W/2 + col] > -1){
     				if (max < input_ds[(destY + SE_H/2 + row) * w + destX + SE_W/2 + col])
     					max = input_ds[(destY + SE_H/2 + row) * w + destX + SE_W/2 + col];
