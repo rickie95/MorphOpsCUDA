@@ -165,28 +165,6 @@ __global__ void process(float *input_img, float *output_img, int img_W, int img_
 				input_ds[(destY + SE_H / 2) * w + col] = input_img[globalY * img_W + (globalX - SE_W / 2 + col)];
 			}
 
-	// LOAD PADDING
-	/*
-    if(tx == 0 && ty == 0){
-        for(int row = 0; row < SE_H/2; row += 1){ // TOP BAR
-            for(int col = 0; col < w; col += 1){
-                if(globalY == 0){
-                    input_ds[row * w + col] = -1;
-                }else{
-                    input_ds[row * w + col] = input_img[(globalY - SE_H/2 + row)* img_W + (globalX - SE_W/2 + col)];
-                }
-            }
-        }
-        for(int row = SE_H/2; row < w; row += 1) // LEFT COLUMN
-            for(int col = 0; col < SE_W/2; col += 1){
-                if(globalX == 0){
-                    input_ds[row * w + col] = -1;
-                }else{
-                    input_ds[row * w + col] = input_img[(globalY - SE_H/2 + row)* img_W + (globalX - SE_W/2 + col)];
-                }
-            }
-    }*/
-
 	if(ty == TILE_WIDTH - 1) // BOTTOM COLUMN
 		for (int row = w - SE_H / 2; row < w; row += 1) {
 			int gy = globalY + (row - w + SE_H / 2);
@@ -253,36 +231,8 @@ __global__ void process(float *input_img, float *output_img, int img_W, int img_
                  } else {
                      input_ds[row * w + col] = input_img[gy * img_W + gx];
                  }
-	         }
-
-
-
-	/*
-    if(tx ==TILE_WIDTH-1 && ty == TILE_WIDTH-1){
-    	for(int row = w - SE_H/2; row < w; row += 1) // 3) BOTTOM ROWS GROUP
-			for(int col = SE_W/2; col < w; col += 1){
-				int gx = globalX - w + SE_H/2 + col;
-				int gy = globalY + (row - w + SE_H/2);
-				if(gy < img_H  && gx < img_W -1){
-					input_ds[row * w + col] = input_img[gy * img_W + gx];
-				}else{
-					input_ds[row * w + col] = -1;
-				}
-			}
-
-
-        for(int row = SE_H/2; row < w - SE_H/2; row += 1) // 4) right COLUMNS GROUP
-        	for(int col = w - SE_W/2; col < w; col += 1){
-        		int gx = globalX + col + SE_W/2 - w +1;
-				int gy = globalY + row - w + SE_H/2 + 1;
-				if(gx < img_W && gy < img_H){
-					input_ds[row * w + col] = input_img[gy * img_W + gx];
-				}else{
-					input_ds[row * w + col] = -1;
-				}
-        	}
-    }
-    */
+	      }
+	
     __syncthreads();
     // 2) COMPUTE - load neighborhood and write max/min
     if((globalY >= 0 && globalY < img_H && globalX >= 0 && globalX < img_W)){
